@@ -6,7 +6,7 @@ import { z } from 'zod';
 // Zod Schema for Validation
 const loginSchema = z.object({
   email: z.string().email('Email không đúng định dạng'),
-  password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
+  password: z.string().min(8, 'Mật khẩu phải có ít nhất 8 ký tự'),
   role: z.string().min(1)
 });
 
@@ -206,9 +206,9 @@ export default function LoginPage() {
           </div>
           
           <div className="flex justify-end pt-1">
-             <a href="#" className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+             <Link to="/forgot-password" className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
               Quên mật khẩu?
-            </a>
+            </Link>
           </div>
 
           <button
