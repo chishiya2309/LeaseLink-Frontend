@@ -157,7 +157,7 @@ export default function RegisterPage() {
 
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">Đăng ký tài khoản Chủ nhà</h1>
-          <p className="text-gray-500 text-sm">Tạo tài khoản mới cùng các tính năng quản lý</p>
+          <p className="text-gray-500 text-sm">Tạo tài khoản mới để tiến hành đăng tin cho thuê</p>
         </div>
 
         {generalError && (

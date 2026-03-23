@@ -6,6 +6,7 @@ import { PropertyGrid } from './components/PropertyGrid';
 import { ChatBubble } from './components/ChatBubble';
 import { Footer } from './components/Footer';
 import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 
 function Home() {
@@ -30,7 +31,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<div className="flex-grow flex items-center justify-center p-4"><h1>Login Page (Placeholder)</h1></div>} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
       {!isAuthPage && <Footer />}
