@@ -100,7 +100,34 @@ export default function RegisterPage() {
         setGeneralError(res.message || 'Đăng ký thất bại.');
       }
     } catch (err: any) {
-      setGeneralError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+      console.error("API Error:", err);
+      let isFieldError = false;
+      const newFormErrors: Record<string, string> = {};
+
+      // Handle standard Spring Boot validation errors format (err.errors array)
+      if (err.errors && Array.isArray(err.errors)) {
+        err.errors.forEach((errorItem: any) => {
+          if (errorItem.field && errorItem.defaultMessage) {
+            newFormErrors[errorItem.field] = errorItem.defaultMessage;
+            isFieldError = true;
+          }
+        });
+      } 
+      // Handle custom map format where keys are field names (e.g. {"email": "..."})
+      else if (typeof err === 'object' && err !== null && !err.message) {
+        Object.keys(formData).forEach(key => {
+          if (err[key] && typeof err[key] === 'string') {
+            newFormErrors[key] = err[key];
+            isFieldError = true;
+          }
+        });
+      }
+
+      if (isFieldError) {
+        setFormErrors(prev => ({ ...prev, ...newFormErrors }));
+      } else {
+        setGeneralError(err.message || err.error || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+      }
     } finally {
       setLoading(false);
     }
