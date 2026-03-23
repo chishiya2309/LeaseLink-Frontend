@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { authApi } from '../api/auth';
 import { AuthFlowShell } from '../components/auth/AuthFlowShell';
 import { AuthPrimaryButton } from '../components/auth/AuthPrimaryButton';
 import { AuthTextField } from '../components/auth/AuthTextField';
+import { clearForgotPasswordFlow, setForgotPasswordEmail } from '../utils/forgotPasswordFlow';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -10,8 +12,9 @@ export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!email.trim()) {
@@ -24,12 +27,23 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    setError('');
-    navigate('/forgot-password/verify', {
-      state: {
-        email,
-      },
-    });
+    try {
+      setLoading(true);
+      setError('');
+      clearForgotPasswordFlow();
+      await authApi.requestPasswordReset({ email });
+      setForgotPasswordEmail(email);
+
+      navigate('/forgot-password/verify', {
+        state: {
+          email,
+        },
+      });
+    } catch (err: any) {
+      setError(err?.message || err?.error || 'Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,7 +68,7 @@ export default function ForgotPasswordPage() {
           error={error}
         />
 
-        <AuthPrimaryButton type="submit" disabled={!email.trim()}>
+        <AuthPrimaryButton type="submit" disabled={!email.trim()} loading={loading}>
           Đặt lại mật khẩu
         </AuthPrimaryButton>
       </form>

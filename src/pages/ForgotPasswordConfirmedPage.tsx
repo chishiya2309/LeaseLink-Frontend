@@ -3,17 +3,19 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { AuthFlowShell } from '../components/auth/AuthFlowShell';
 import { AuthPrimaryButton } from '../components/auth/AuthPrimaryButton';
+import { getForgotPasswordEmail, getForgotPasswordResetToken } from '../utils/forgotPasswordFlow';
 
 interface ConfirmedLocationState {
   email?: string;
-  code?: string;
+  resetToken?: string;
 }
 
 export default function ForgotPasswordConfirmedPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state ?? {}) as ConfirmedLocationState;
-  const email = state.email ?? 'contact@lscodetech.com';
+  const email = state.email || getForgotPasswordEmail() || 'contact@lscodetech.com';
+  const resetToken = state.resetToken || getForgotPasswordResetToken();
 
   return (
     <AuthFlowShell
@@ -35,12 +37,22 @@ export default function ForgotPasswordConfirmedPage() {
         type="button"
         onClick={() =>
           navigate('/forgot-password/reset', {
-            state,
+            state: {
+              email,
+              resetToken,
+            },
           })
         }
+        disabled={!resetToken}
       >
         Xác nhận
       </AuthPrimaryButton>
+
+      {!resetToken && (
+        <p className="mt-4 text-sm text-red-500">
+          Phiên xác thực không còn hợp lệ. Vui lòng quay lại bước nhập mã.
+        </p>
+      )}
     </AuthFlowShell>
   );
 }

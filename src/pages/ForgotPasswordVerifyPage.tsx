@@ -1,8 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { authApi } from '../api/auth';
 import { AuthFlowShell } from '../components/auth/AuthFlowShell';
 import { AuthPrimaryButton } from '../components/auth/AuthPrimaryButton';
 import { OtpCodeField } from '../components/auth/OtpCodeField';
+import {
+  getForgotPasswordEmail,
+  setForgotPasswordEmail,
+  setForgotPasswordResetToken,
+} from '../utils/forgotPasswordFlow';
 
 interface VerifyLocationState {
   email?: string;
@@ -26,14 +32,16 @@ export default function ForgotPasswordVerifyPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state ?? {}) as VerifyLocationState;
-  const email = state.email ?? 'contact@lscodetech.com';
+  const email = state.email || getForgotPasswordEmail() || 'contact@lscodetech.com';
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [resent, setResent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const maskedEmail = useMemo(() => maskEmail(email), [email]);
 
-  const handleVerify = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (code.length !== 6) {
@@ -41,19 +49,51 @@ export default function ForgotPasswordVerifyPage() {
       return;
     }
 
-    setError('');
-    navigate('/forgot-password/confirmed', {
-      state: {
-        email,
-        code,
-      },
-    });
+    try {
+      setLoading(true);
+      setError('');
+      const response = await authApi.verifyResetCode({ email, code });
+      const resetToken = response?.data?.resetToken;
+
+      if (!resetToken) {
+        throw new Error('Không nhận được reset token từ máy chủ.');
+      }
+
+      setForgotPasswordEmail(email);
+      setForgotPasswordResetToken(resetToken);
+
+      navigate('/forgot-password/confirmed', {
+        state: {
+          email,
+          resetToken,
+        },
+      });
+    } catch (err: any) {
+      setError(err?.message || err?.error || 'Mã xác thực không hợp lệ hoặc đã hết hạn.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      setResending(true);
+      setError('');
+      await authApi.requestPasswordReset({ email });
+      setForgotPasswordEmail(email);
+      setCode('');
+      setResent(true);
+    } catch (err: any) {
+      setError(err?.message || err?.error || 'Không thể gửi lại email xác thực.');
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
     <AuthFlowShell
       title="Kiểm tra email của bạn"
-      description={`Chúng tôi đã gửi một liên kết đặt lại mật khẩu đến ${maskedEmail}, vui lòng nhập các chữ số OTP bên dưới để tiếp tục.`}
+      description={`Chúng tôi đã gửi mã xác thực đến ${maskedEmail}, vui lòng nhập 6 chữ số bên dưới để tiếp tục.`}
       backTo="/forgot-password"
       backLabel="Quay lại nhập email"
     >
@@ -69,7 +109,7 @@ export default function ForgotPasswordVerifyPage() {
           error={error}
         />
 
-        <AuthPrimaryButton type="submit" disabled={code.length !== 6}>
+        <AuthPrimaryButton type="submit" disabled={code.length !== 6} loading={loading}>
           Xác nhận OTP
         </AuthPrimaryButton>
       </form>
@@ -78,10 +118,11 @@ export default function ForgotPasswordVerifyPage() {
         Vẫn chưa nhận được email?{' '}
         <button
           type="button"
-          onClick={() => setResent(true)}
-          className="font-semibold text-[#5b83e8] transition-colors hover:text-[#4a74de]"
+          onClick={handleResend}
+          className="font-semibold text-[#5b83e8] transition-colors hover:text-[#4a74de] disabled:opacity-60"
+          disabled={resending}
         >
-          Gửi lại email
+          {resending ? 'Đang gửi...' : 'Gửi lại email'}
         </button>
       </p>
 

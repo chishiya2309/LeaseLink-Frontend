@@ -1,28 +1,46 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { authApi } from '../api/auth';
 import { AuthFlowShell } from '../components/auth/AuthFlowShell';
 import { AuthPrimaryButton } from '../components/auth/AuthPrimaryButton';
 import { AuthTextField } from '../components/auth/AuthTextField';
+import {
+  clearForgotPasswordFlow,
+  getForgotPasswordEmail,
+  getForgotPasswordResetToken,
+} from '../utils/forgotPasswordFlow';
+
+interface ResetLocationState {
+  email?: string;
+  resetToken?: string;
+}
 
 export default function ForgotPasswordResetPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state ?? {}) as ResetLocationState;
+  const email = state.email || getForgotPasswordEmail();
+  const resetToken = state.resetToken || getForgotPasswordResetToken();
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [generalError, setGeneralError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setGeneralError('');
 
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const nextErrors: Record<string, string> = {};
@@ -46,11 +64,33 @@ export default function ForgotPasswordResetPage() {
       return;
     }
 
-    setSuccessMessage('Mật khẩu mới đã được cập nhật. Đang chuyển bạn về trang đăng nhập...');
+    if (!email || !resetToken) {
+      setGeneralError('Phiên đặt lại mật khẩu không còn hợp lệ. Vui lòng bắt đầu lại.');
+      return;
+    }
 
-    window.setTimeout(() => {
-      navigate('/login');
-    }, 1400);
+    try {
+      setLoading(true);
+      setGeneralError('');
+      await authApi.resetPassword({
+        email,
+        resetToken,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
+
+      clearForgotPasswordFlow();
+      setSuccessMessage('Mật khẩu mới đã được cập nhật. Đang chuyển bạn về trang đăng nhập...');
+
+      window.setTimeout(() => {
+        navigate('/login');
+      }, 1400);
+    } catch (err: any) {
+      setSuccessMessage('');
+      setGeneralError(err?.message || err?.error || 'Không thể cập nhật mật khẩu mới.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const canSubmit =
@@ -65,6 +105,12 @@ export default function ForgotPasswordResetPage() {
       backTo="/forgot-password/confirmed"
       backLabel="Quay lại bước xác nhận"
     >
+      {generalError && (
+        <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {generalError}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-5">
         <AuthTextField
           label="Password"
@@ -90,7 +136,7 @@ export default function ForgotPasswordResetPage() {
           Sử dụng ít nhất 8 ký tự và tránh sử dụng lại mật khẩu trước đó.
         </p>
 
-        <AuthPrimaryButton type="submit" disabled={!canSubmit}>
+        <AuthPrimaryButton type="submit" disabled={!canSubmit || !email || !resetToken} loading={loading}>
           Cập nhật mật khẩu
         </AuthPrimaryButton>
       </form>
