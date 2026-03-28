@@ -14,17 +14,18 @@ import ForgotPasswordConfirmedPage from './pages/ForgotPasswordConfirmedPage';
 import ForgotPasswordResetPage from './pages/ForgotPasswordResetPage';
 import WaitingApprovalPage from './pages/WaitingApprovalPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { SearchProvider } from './context/SearchContext';
 
 
 function Home() {
   return (
-    <>
+    <SearchProvider>
       <div className="flex-grow">
         <MapSection />
         <PropertyGrid />
       </div>
       <AiChatWidgetView />
-    </>
+    </SearchProvider>
   );
 }
 
