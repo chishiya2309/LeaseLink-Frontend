@@ -1,44 +1,84 @@
 import { useEffect, useState } from 'react';
 import { PropertyCard } from './PropertyCard';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, SearchX } from 'lucide-react';
 import { propertyApi } from '../api/propertyApi';
+import { useSearch } from '../context/SearchContext';
 
-const PROPERTIES_PER_PAGE = 8;
+const PROPERTIES_PER_PAGE = 12;
 
 export function PropertyGrid() {
   const [currentPage, setCurrentPage] = useState(1);
   const [properties, setProperties] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const { filters, searchVersion } = useSearch();
+
+  // Reset to page 1 when a new search is triggered
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchVersion]);
 
   useEffect(() => {
     const fetchProperties = async () => {
       try {
         setLoading(true);
-        const res = await propertyApi.getApprovedProperties(currentPage - 1, PROPERTIES_PER_PAGE);
+
+        const params: any = {
+          page: currentPage - 1,
+          size: PROPERTIES_PER_PAGE,
+        };
+
+        // Only add non-undefined filter values
+        if (filters.areaId) params.areaId = filters.areaId;
+        if (filters.roomTypeId) params.roomTypeId = filters.roomTypeId;
+        if (filters.minPrice) params.minPrice = filters.minPrice;
+        if (filters.maxPrice) params.maxPrice = filters.maxPrice;
+        if (filters.bedrooms) params.bedrooms = filters.bedrooms;
+        if (filters.allowPets) params.allowPets = filters.allowPets;
+
+        const hasFilters = filters.areaId || filters.roomTypeId ||
+                          filters.minPrice || filters.maxPrice ||
+                          filters.bedrooms || filters.allowPets;
+
+        let res;
+        if (hasFilters || searchVersion > 0) {
+          // Use search endpoint when filters exist or user explicitly searched
+          res = await propertyApi.searchProperties(params);
+        } else {
+          // Default: use approved endpoint for initial page load
+          res = await propertyApi.getApprovedProperties(currentPage - 1, PROPERTIES_PER_PAGE);
+        }
+
         const pageData = res.data || res;
-        
+
+        // Backend Page object uses 'content', but custom SearchResponse uses 'properties'
+        const rawProperties = pageData.properties || pageData.content || [];
+
         // Map backend PropertyResponse to frontend Property type
-        const mappedProperties = (pageData.content || []).map((p: any) => ({
+        const mappedProperties = rawProperties.map((p: any) => ({
           id: p.id,
           image: p.images?.find((img: any) => img.isThumbnail)?.imageUrl || p.images?.[0]?.imageUrl || '/placeholder-property.jpg',
           title: p.title,
-          price: new Intl.NumberFormat('vi-VN', { 
-            style: 'currency', 
-            currency: 'VND' 
+          price: new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
           }).format(p.monthlyPrice) + ' / tháng',
           priceValue: p.monthlyPrice,
-          location: `${p.addressLine}, ${p.areaName}`,
+          location: p.areaName ? `${p.addressLine}, ${p.areaName}` : p.addressLine,
           beds: p.bedrooms || 0,
-          baths: 1, // Defaulting as backend doesn't have baths yet
+          baths: 1, // Defaulting to 1 as not in DTO yet
           area: p.areaM2 || 0,
-          rating: 4.8, // Mocked
-          reviewCount: Math.floor(Math.random() * 50) + 10, // Mocked
-          propertyType: 'canho', // Defaulting as mapping is complex
+          rating: 4.8,
+          reviewCount: Math.floor(Math.random() * 50) + 10,
+          propertyType: (p.roomTypeName?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '') === 'chungcu' ? 'chungcu' : 
+                         p.roomTypeName?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '') === 'canho' ? 'canho' : 'nha'),
         }));
 
         setProperties(mappedProperties);
         setTotalPages(pageData.totalPages || 0);
+        setTotalElements(pageData.totalElements || 0);
       } catch (error) {
         console.error("Failed to fetch properties:", error);
       } finally {
@@ -47,7 +87,7 @@ export function PropertyGrid() {
     };
 
     fetchProperties();
-  }, [currentPage]);
+  }, [currentPage, searchVersion, filters]);
 
   if (loading) {
     return (
@@ -57,26 +97,32 @@ export function PropertyGrid() {
     );
   }
 
-  const currentProperties = properties;
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-16">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Bất động sản nổi bật</h2>
-          <p className="text-gray-500">Khám phá các không gian sống tuyệt vời dành cho bạn</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            {searchVersion > 0 ? 'Kết quả tìm kiếm' : 'Bất động sản nổi bật'}
+          </h2>
+          <p className="text-gray-500">
+            {searchVersion > 0
+              ? `Tìm thấy ${totalElements} bất động sản phù hợp`
+              : 'Khám phá các không gian sống tuyệt vời dành cho bạn'}
+          </p>
         </div>
       </div>
 
       {/* Property Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {currentProperties.length > 0 ? (
-          currentProperties.map((property) => (
+        {properties.length > 0 ? (
+          properties.map((property) => (
             <PropertyCard key={property.id} {...property} />
           ))
         ) : (
-          <div className="col-span-full text-center py-20 text-gray-500">
-            Không có bất động sản nào được tìm thấy.
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
+            <SearchX size={48} className="mb-4" />
+            <p className="text-lg font-medium text-gray-500">Không tìm thấy bất động sản nào</p>
+            <p className="text-sm mt-1">Thử thay đổi bộ lọc tìm kiếm</p>
           </div>
         )}
       </div>
