@@ -15,6 +15,18 @@ export const propertyApi = {
     return axiosClient.get(PROPERTY_ENDPOINTS.approved, { params: { page, size } });
   },
 
+  searchProperties: async (params: {
+    areaId?: number;
+    roomTypeId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    bedrooms?: number;
+    allowPets?: boolean;
+    page?: number;
+    size?: number;
+  }) => {
+    return axiosClient.get(`${PROPERTY_ENDPOINTS.base}/search`, { params });
+
   getPropertyById: async (id: string) => {
     return axiosClient.get(`${PROPERTY_ENDPOINTS.base}/${id}`);
   },
