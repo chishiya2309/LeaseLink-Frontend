@@ -16,7 +16,7 @@ jobs:
 
       - name: Đẩy code sang Repo leaselinkconnect
         run: |
-          git remote add vercel-repo https://chishiya2309:${{ secrets.SYNC_TOKEN }}@github.com/chishiya2309/leaselinkconnect.git
+          git remote add vercel-repo https://${{ secrets.SYNC_TOKEN }}@github.com/chishiya2309/leaselinkconnect.git
           
           # Đã thêm --force để ép ghi đè repo phụ bằng code của repo chính
           git push vercel-repo main --force
