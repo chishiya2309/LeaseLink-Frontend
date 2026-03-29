@@ -25,9 +25,13 @@ export default function Dashboard() {
   const userJson = localStorage.getItem("user");
   const user = userJson ? JSON.parse(userJson) : null;
   const isHost = user?.role?.code === "HOST";
+  const isAdmin = user?.role?.code === "ADMIN";
   const defaultPage = isHost ? "tin-dang-cua-toi" : "tong-quan";
   const requestedPage = searchParams.get("page");
-  const allowedPages = ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"];
+  
+  const allowedPages = isAdmin 
+    ? ["tong-quan", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host", "cai-dat"]
+    : ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "cai-dat"];
 
   const [activePage, setActivePage] = useState(
     requestedPage && allowedPages.includes(requestedPage) ? requestedPage : defaultPage

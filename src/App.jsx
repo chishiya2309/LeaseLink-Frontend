@@ -18,6 +18,9 @@ import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import NotFoundPage from './pages/NotFoundPage';
 import { SearchProvider } from './context/SearchContext';
+import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 
 function Home() {
@@ -35,6 +38,18 @@ function Home() {
 function AppContent() {
   const location = useLocation();
   const shouldHideSiteChrome = location.pathname === '/dashboard';
+
+  useEffect(() => {
+    // Check for session failure
+    const sessionExpired = localStorage.getItem('sessionExpired');
+    if (sessionExpired === 'true') {
+      toast.error('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.', {
+        duration: 8000,
+        position: 'top-center'
+      });
+      localStorage.removeItem('sessionExpired');
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
@@ -60,6 +75,7 @@ function AppContent() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!shouldHideSiteChrome && <Footer />}
+      <Toaster />
     </div>
   );
 }

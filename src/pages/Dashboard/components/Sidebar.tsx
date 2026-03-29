@@ -31,10 +31,13 @@ export function Sidebar({ activePage, onPageChange }: SidebarProps) {
   const roleCode = user?.role?.code || "HOST";
 
   const filteredMenuItems = menuItems.filter((item) => {
-    if (roleCode === "ADMIN") return true;
+    if (roleCode === "ADMIN") {
+      // Admin menu
+      return ["tong-quan", "duyet-tin-dang", "quan-ly-host", "tat-ca-tin-dang", "cai-dat"].includes(item.id);
+    }
     
     // HOST only sees these
-    return ["tin-dang-cua-toi", "dang-tin-moi", "cai-dat"].includes(item.id);
+    return ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "cai-dat"].includes(item.id);
   });
 
   return (

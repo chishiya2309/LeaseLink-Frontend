@@ -59,6 +59,15 @@ axiosClient.interceptors.response.use(
     const status = error.response?.status;
     const originalRequest = config;
 
+    if (status === 403) {
+      console.warn("Detected 403 Forbidden error. Forcing logout due to access denial...");
+      localStorage.setItem("sessionExpired", "true");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
     if (status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve) => {
@@ -76,6 +85,7 @@ axiosClient.interceptors.response.use(
       if (!refreshToken) {
         isRefreshing = false;
         // Redirect to login or clear data
+        localStorage.setItem("sessionExpired", "true");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         window.location.href = "/login";
@@ -99,6 +109,7 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
+        localStorage.setItem("sessionExpired", "true");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         window.location.href = "/login";
