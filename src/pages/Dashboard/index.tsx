@@ -88,7 +88,7 @@ export default function Dashboard() {
 
       {/* FAB - Chỉ hiện cho HOST hoặc nếu thích */}
       {isHost && (
-        <button 
+        <button
           onClick={() => setActivePage("dang-tin-moi")}
           className="fixed bottom-6 right-6 w-12 h-12 bg-teal-500 hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-50 hover:scale-105 active:scale-95"
         >

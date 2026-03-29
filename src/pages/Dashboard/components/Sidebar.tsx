@@ -32,7 +32,7 @@ export function Sidebar({ activePage, onPageChange }: SidebarProps) {
 
   const filteredMenuItems = menuItems.filter((item) => {
     if (roleCode === "ADMIN") return true;
-    
+
     // HOST only sees these
     return ["tin-dang-cua-toi", "dang-tin-moi", "cai-dat"].includes(item.id);
   });
@@ -56,11 +56,10 @@ export function Sidebar({ activePage, onPageChange }: SidebarProps) {
             <button
               key={item.id}
               onClick={() => onPageChange(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg mb-1 text-left transition-all duration-150 ${
-                isActive
-                  ? "bg-teal-500 text-white"
-                  : "text-gray-400 hover:bg-white/5 hover:text-white"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg mb-1 text-left transition-all duration-150 ${isActive
+                ? "bg-teal-500 text-white"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
+                }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm">{item.label}</span>
