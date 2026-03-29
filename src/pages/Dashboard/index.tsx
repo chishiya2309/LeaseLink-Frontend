@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { Header } from "./components/Header";
 import { Overview } from "./components/Overview";
@@ -9,6 +9,7 @@ import { AdminPropertyApproval } from "./components/AdminPropertyApproval";
 import { AdminAllProperties } from "./components/AdminAllProperties";
 import { AdminHostManagement } from "./components/AdminHostManagement";
 import { Plus } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 const pages: Record<string, { title: string; description: string }> = {
   "duyet-tin-dang": { title: "Duyệt Tin Đăng", description: "Quản lý và duyệt các tin đăng từ người dùng." },
@@ -20,11 +21,17 @@ const pages: Record<string, { title: string; description: string }> = {
 };
 
 export default function Dashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const userJson = localStorage.getItem("user");
   const user = userJson ? JSON.parse(userJson) : null;
   const isHost = user?.role?.code === "HOST";
+  const defaultPage = isHost ? "tin-dang-cua-toi" : "tong-quan";
+  const requestedPage = searchParams.get("page");
+  const allowedPages = ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"];
 
-  const [activePage, setActivePage] = useState(isHost ? "tin-dang-cua-toi" : "tong-quan");
+  const [activePage, setActivePage] = useState(
+    requestedPage && allowedPages.includes(requestedPage) ? requestedPage : defaultPage
+  );
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [editingProperty, setEditingProperty] = useState<any>(null);
 
@@ -38,7 +45,19 @@ export default function Dashboard() {
       setEditingProperty(null);
     }
     setActivePage(page);
+    setSearchParams(page === defaultPage ? {} : { page });
   };
+
+  useEffect(() => {
+    if (!requestedPage) {
+      setActivePage(defaultPage);
+      return;
+    }
+
+    if (allowedPages.includes(requestedPage)) {
+      setActivePage(requestedPage);
+    }
+  }, [requestedPage, defaultPage]);
 
   return (
     <div className="flex h-screen w-full bg-[#eef2f8] overflow-hidden">
