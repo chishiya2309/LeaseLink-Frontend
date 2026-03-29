@@ -232,9 +232,8 @@ export function AiChatWidgetView() {
   };
 
   const chips = [
-    "Căn hộ 3 phòng ngủ gần trường học ở Cẩm Lệ",
-    "Căn hộ ở Hải Châu cho dân văn phòng ngân sách dưới 9 củ",
-    "Căn hộ cho cặp đôi, cho phép nuôi thú cưng dưới 8 triệu"
+    "Căn hộ gần biển, full nội thất, có cửa sổ và ban công",
+    "Căn hộ 2 phòng ngủ, rộng rãi, gần nhà hàng, quán cà phê"
   ];
 
   if (!isOpen) {
