@@ -1,46 +1,42 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
-import { z } from 'zod';
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { z } from "zod";
+import { authApi } from "../api/auth";
 
-// Zod Schema for Validation
 const loginSchema = z.object({
-  email: z.string().email('Email không đúng định dạng'),
-  password: z.string().min(8, 'Mật khẩu phải có ít nhất 8 ký tự'),
+  email: z.string().email("Email không đúng định dạng"),
+  password: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự"),
 });
-
-type Role = 'HOST' | 'ADMIN';
-
-import { authApi } from '../api/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [generalError, setGeneralError] = useState(location.state?.error || '');
-  const [success, setSuccess] = useState('');
+  const [generalError, setGeneralError] = useState(location.state?.error || "");
+  const [success, setSuccess] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear field-specific error when user starts typing
+
     if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: '' }));
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
     }
-    setGeneralError('');
+
+    setGeneralError("");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setGeneralError('');
-    setSuccess('');
+    setGeneralError("");
+    setSuccess("");
     setFormErrors({});
 
     const validationResult = loginSchema.safeParse(formData);
@@ -63,154 +59,154 @@ export default function LoginPage() {
       setLoading(true);
       const res = await authApi.login(formData);
 
-      // The backend returns a structure like: { status, message, data: { accessToken, refreshToken, user } }
       if (res.status === 200) {
         const { accessToken, refreshToken, user } = res.data;
 
-        // Store auth data
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+        localStorage.setItem("user", JSON.stringify(user));
 
-        console.log('Login successful:', res.message);
-        setSuccess(res.message || 'Đăng nhập thành công');
+        setSuccess(res.message || "Đăng nhập thành công");
 
         setTimeout(() => {
-          navigate('/dashboard');
-        }, 1500);
+          navigate("/dashboard");
+        }, 1200);
       } else {
-        setGeneralError(res.message || 'Đăng nhập thất bại.');
+        setGeneralError(res.message || "Đăng nhập thất bại.");
       }
-
     } catch (err: any) {
       console.error("API Error detailed:", err);
 
-      let errorMessage = 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.';
+      let errorMessage = "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.";
 
-      // Case 1: Error was unwrapped by authApi.ts (err is response.data)
-      if (err.message && !err.message.includes('status code')) {
+      if (err.message && !err.message.includes("status code")) {
         errorMessage = err.message;
-      } else if (err.error && typeof err.error === 'string') {
+      } else if (err.error && typeof err.error === "string") {
         errorMessage = err.error;
-      }
-      // Case 2: Raw Axios error (not unwrapped)
-      else if (err.response?.data) {
+      } else if (err.response?.data) {
         const data = err.response.data;
         if (data.message) errorMessage = data.message;
         else if (data.error) errorMessage = data.error;
-      }
-      // Case 3: Error object message (standard JS error)
-      else if (err.message && !err.message.includes('status code')) {
-        errorMessage = err.message;
-      }
-      // Case 4: Promise rejection is just a string
-      else if (typeof err === 'string') {
+      } else if (typeof err === "string") {
         errorMessage = err;
       }
 
+      // Keep formData untouched so users do not have to re-enter everything.
       setGeneralError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClassName = (fieldName: string) => `
-    w-full px-4 py-3 bg-[#f8fafc] border focus:bg-white focus:outline-none focus:ring-4 rounded-xl text-sm transition-all
-    ${formErrors[fieldName]
-      ? 'border-red-500 focus:ring-red-100 focus:border-red-500 bg-red-50/30'
-      : 'border-slate-200 focus:ring-slate-100 focus:border-slate-300 hover:border-slate-300'
-    }
-  `;
+  const inputClassName = (fieldName: string) =>
+    `w-full rounded-2xl border px-4 py-3.5 text-sm transition-all focus:outline-none focus:ring-4 ${
+      formErrors[fieldName]
+        ? "border-red-500 bg-red-50/40 focus:border-red-500 focus:ring-red-100"
+        : "border-slate-200 bg-slate-50/80 focus:border-teal-500 focus:bg-white focus:ring-teal-100"
+    }`;
 
   return (
-    <div className="flex flex-col flex-grow items-center justify-center p-4 min-h-[calc(100vh-64px)]" style={{ background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)' }}>
-      <div className="w-full max-w-md bg-white rounded-[24px] shadow-[0_8px_40px_rgb(0,0,0,0.06)] sm:p-8 p-6 mx-auto border border-gray-100/50">
-
-        {/* Tabs */}
-        <div className="flex bg-slate-100/80 p-1.5 rounded-2xl mb-8 relative">
-          <div className="flex-1 text-center py-2.5 text-sm font-semibold bg-white text-slate-900 shadow-[0_2px_8px_rgb(0,0,0,0.04)] rounded-xl relative z-10 transition-all">
-            Đăng nhập
+    <section className="flex flex-1 items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(20,184,166,0.12),_transparent_30%),linear-gradient(180deg,_#f8fbff_0%,_#eef3f8_100%)] px-4 py-12 sm:px-6 lg:px-8">
+      <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        <div className="hidden lg:block">
+          <div className="max-w-xl">
+            <div className="mb-5 inline-flex items-center rounded-full border border-teal-200 bg-white/80 px-4 py-2 text-sm font-semibold text-teal-700 shadow-sm backdrop-blur">
+              LeaseLink for Hosts & Admins
+            </div>
+            <h1 className="text-5xl font-bold leading-tight text-slate-900">
+              Đăng nhập để tiếp tục quản lý tin đăng và tài khoản của bạn.
+            </h1>
+            <p className="mt-5 text-lg leading-8 text-slate-600">
+              Một không gian gọn gàng để chủ nhà đăng tin nhanh hơn và admin kiểm soát toàn bộ hệ thống dễ hơn.
+            </p>
           </div>
-          <Link to="/register" className="flex-1 text-center py-2.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors z-10">
-            Đăng ký
-          </Link>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-[28px] font-bold text-slate-900 mb-2 tracking-tight">Đăng nhập</h1>
-          <p className="text-slate-500 text-sm">Đăng nhập vào tài khoản của bạn</p>
-        </div>
-
-        {generalError && (
-          <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-100 flex gap-3 items-start animate-in fade-in slide-in-from-top-2 duration-300">
-            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-            <span className="leading-relaxed">{generalError}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 text-green-700 text-sm rounded-xl border border-green-100 flex gap-3 items-start animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="w-5 h-5 mt-0.5 flex-shrink-0 bg-green-500 rounded-full flex items-center justify-center">
-              <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
+        <div className="mx-auto w-full max-w-md rounded-[28px] border border-white/70 bg-white/92 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur sm:p-8">
+          <div className="mb-8 flex rounded-2xl bg-slate-100 p-1.5">
+            <div className="flex-1 rounded-xl bg-white py-2.5 text-center text-sm font-semibold text-slate-900 shadow-sm">
+              Đăng nhập
             </div>
-            <span className="leading-relaxed">{success}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-800">Email</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="host@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              className={inputClassName('email')}
-            />
-            {formErrors.email && <p className="text-[13px] text-red-500 font-medium animate-in slide-in-from-top-1">{formErrors.email}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-800">Mật khẩu</label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                className={inputClassName('password')}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-            {formErrors.password && <p className="text-[13px] text-red-500 font-medium animate-in slide-in-from-top-1">{formErrors.password}</p>}
-          </div>
-
-
-          <div className="flex justify-end pt-1">
-            <Link to="/forgot-password" className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
-              Quên mật khẩu?
+            <Link
+              to="/register"
+              className="flex-1 py-2.5 text-center text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+            >
+              Đăng ký
             </Link>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 px-4 bg-[#030213] hover:bg-slate-800 text-white text-[15px] font-semibold rounded-xl transition-all shadow-[0_4px_14px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] flex justify-center items-center mt-4 disabled:opacity-70 disabled:cursor-not-allowed group"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span className="group-hover:scale-[1.02] transition-transform">Đăng nhập</span>}
-          </button>
-        </form>
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">Chào mừng quay lại</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Đăng nhập vào tài khoản của bạn để tiếp tục.</p>
+          </div>
+
+          {generalError && (
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+              <span className="leading-6">{generalError}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-slate-800">Email</label>
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                placeholder="host@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                className={inputClassName("email")}
+              />
+              {formErrors.email && <p className="text-[13px] font-medium text-red-500">{formErrors.email}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-slate-800">Mật khẩu</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={inputClassName("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+              {formErrors.password && <p className="text-[13px] font-medium text-red-500">{formErrors.password}</p>}
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <Link to="/forgot-password" className="text-[13px] font-semibold text-teal-600 transition-colors hover:text-teal-700 hover:underline">
+                Quên mật khẩu?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex w-full items-center justify-center rounded-2xl bg-slate-950 px-4 py-3.5 text-[15px] font-semibold text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Đăng nhập"}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
