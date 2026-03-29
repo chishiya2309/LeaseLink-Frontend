@@ -91,9 +91,8 @@ function MascotLauncher({
             <span className="text-sm font-semibold text-slate-800">LeaseLink AI</span>
           </div>
           <div
-            className={`pr-5 text-sm leading-6 text-slate-600 transition-all duration-300 ${
-              isMessageVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
-            }`}
+            className={`pr-5 text-sm leading-6 text-slate-600 transition-all duration-300 ${isMessageVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
+              }`}
           >
             {message}
           </div>
@@ -232,9 +231,8 @@ export function AiChatWidgetView() {
   };
 
   const chips = [
-    "Căn hộ 3 phòng ngủ gần trường học ở Cẩm Lệ",
-    "Căn hộ ở Hải Châu cho dân văn phòng ngân sách dưới 9 củ",
-    "Căn hộ cho cặp đôi, cho phép nuôi thú cưng dưới 8 triệu"
+    "Căn hộ gần biển, full nội thất, có cửa sổ và ban công",
+    "Căn hộ 2 phòng ngủ, rộng rãi, gần nhà hàng, quán cà phê"
   ];
 
   if (!isOpen) {
