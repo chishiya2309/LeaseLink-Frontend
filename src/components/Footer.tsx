@@ -1,32 +1,46 @@
-import { Facebook, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
     <footer className="bg-gray-800 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Về chúng tôi */}
+      <div className="mx-auto max-w-7xl px-4 py-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <div>
-            <h3 className="text-white text-lg mb-4">Về chúng tôi</h3>
-            <p className="text-sm">
-              Chuyên cho thuê nhà, chung cư, căn hộ tại Đà Nẵng với giá tốt nhất thị trường.
+            <h3 className="mb-4 text-lg text-white">Về chúng tôi</h3>
+            <p className="text-sm leading-7">
+              LeaseLink hỗ trợ quản lý và tìm kiếm bất động sản cho thuê tại Đà Nẵng với trải nghiệm rõ ràng hơn cho cả Host và Admin.
             </p>
           </div>
 
-          {/* Liên kết */}
           <div>
-            <h3 className="text-white text-lg mb-4">Liên kết</h3>
+            <h3 className="mb-4 text-lg text-white">Liên kết</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Trang chủ</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Về chúng tôi</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Cho thuê</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Liên hệ</a></li>
+              <li>
+                <Link to="/" className="transition-colors hover:text-teal-400">
+                  Trang chủ
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="transition-colors hover:text-teal-400">
+                  Về chúng tôi
+                </Link>
+              </li>
+              <li>
+                <Link to="/register" className="transition-colors hover:text-teal-400">
+                  Đăng ký Host
+                </Link>
+              </li>
+              <li>
+                <Link to="/login" className="transition-colors hover:text-teal-400">
+                  Đăng nhập
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Liên hệ */}
           <div>
-            <h3 className="text-white text-lg mb-4">Liên hệ</h3>
+            <h3 className="mb-4 text-lg text-white">Liên hệ</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Phone size={16} />
@@ -34,7 +48,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={16} />
-                <span>contact@example.com</span>
+                <span>contact@leaselink.vn</span>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin size={16} />
@@ -43,26 +57,24 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Mạng xã hội */}
           <div>
-            <h3 className="text-white text-lg mb-4">Mạng xã hội</h3>
+            <h3 className="mb-4 text-lg text-white">Mạng xã hội</h3>
             <div className="flex gap-4">
-              <a href="#" className="hover:text-teal-400 transition-colors">
+              <a href="#" className="transition-colors hover:text-teal-400">
                 <Facebook size={24} />
               </a>
-              <a href="#" className="hover:text-teal-400 transition-colors">
+              <a href="#" className="transition-colors hover:text-teal-400">
                 <Instagram size={24} />
               </a>
-              <a href="#" className="hover:text-teal-400 transition-colors">
+              <a href="#" className="transition-colors hover:text-teal-400">
                 <Youtube size={24} />
               </a>
             </div>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm">
-          <p>&copy; 2026 Cho thuê nhà Đà Nẵng. All rights reserved.</p>
+        <div className="mt-8 border-t border-gray-700 pt-8 text-center text-sm">
+          <p>&copy; 2026 LeaseLink. All rights reserved.</p>
         </div>
       </div>
     </footer>

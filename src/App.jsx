@@ -5,6 +5,7 @@ import { MapSection } from './components/MapSection';
 import { PropertyGrid } from './components/PropertyGrid';
 import { AiChatWidgetView } from './components/AiSearch/AiChatWidgetView';
 import { Footer } from './components/Footer';
+import AboutPage from './pages/AboutPage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
@@ -33,20 +34,14 @@ function Home() {
 
 function AppContent() {
   const location = useLocation();
-  const knownPaths = ['/', '/register', '/login', '/dashboard', '/forgot-password', '/waiting-approval'];
-  const isKnownPath = knownPaths.some(p => location.pathname === p || location.pathname.startsWith(p + '/')) || location.pathname.startsWith('/property/');
-  const isAuthPage =
-    location.pathname === '/register' ||
-    location.pathname === '/login' ||
-    location.pathname === '/dashboard' ||
-    location.pathname.startsWith('/forgot-password') ||
-    !isKnownPath;
+  const shouldHideSiteChrome = location.pathname === '/dashboard';
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
-      {!isAuthPage && <Navigation />}
+      {!shouldHideSiteChrome && <Navigation />}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -64,7 +59,7 @@ function AppContent() {
         {/* 404 Not Found - catch all */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      {!isAuthPage && <Footer />}
+      {!shouldHideSiteChrome && <Footer />}
     </div>
   );
 }
